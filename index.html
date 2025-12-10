@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Literacy Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: #0f1419;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            max-height: 750px;
+            border: 2px solid #7c3aed;
+        }
+
+        .header {
+            padding: 20px;
+            background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+            border-bottom: 2px solid #5b21b6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .setup-panel {
+            padding: 30px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+        }
+
+        .setup-panel.hidden {
+            display: none;
+        }
+
+        .setup-content {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .setup-content h2 {
+            margin-bottom: 25px;
+            color: #7c3aed;
+            font-size: 22px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a78bfa;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #0f1419;
+            color: #e0e7ff;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+            background: #1a1a2e;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .setup-status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+            min-height: 20px;
+            color: #a78bfa;
+        }
+
+        .setup-status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        .setup-status.success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #86efac;
+        }
+
+        .chat-panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .chat-panel.active {
+            display: flex;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            background: #0f1419;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #7c3aed;
+            border-radius: 4px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #a78bfa;
+        }
+
+        .message {
+            margin-bottom: 18px;
+            animation: slideIn 0.3s ease;
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .user .message-content {
+            background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .bot .message-content {
+            background: #1a1a2e;
+            color: #e0e7ff;
+            border: 1px solid #3b82f6;
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 2px solid #3b82f6;
+            display: flex;
+            gap: 12px;
+            background: #0f1419;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #1a1a2e;
+            color: #e0e7ff;
+            transition: all 0.3s ease;
+        }
+
+        .input-area input::placeholder {
+            color: #6b7280;
+        }
+
+        .input-area input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+            background: #16213e;
+        }
+
+        .input-area button {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .input-area button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
+        }
+
+        .input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: flex;
+            gap: 6px;
+            padding: 12px 18px;
+        }
+
+        .loading span {
+            width: 8px;
+            height: 8px;
+            background: #7c3aed;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .loading span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .reset-btn {
+            padding: 8px 16px;
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid #ef4444;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .reset-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #fff;
+        }
+
+        .context-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #a78bfa;
+        }
+
+        .context-info strong {
+            color: #7c3aed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Digital Literacy Chatbot</h1>
+            <div class="api-status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Initializing...</span>
+            </div>
+        </div>
+
+        <div class="setup-panel" id="setupPanel">
+            <div class="setup-content">
+                <h2>⚙️ Loading...</h2>
+                <button class="btn btn-primary" onclick="initializeApp()" id="initBtn">Start Chatbot</button>
+                <div class="setup-status" id="setupStatus"></div>
+            </div>
+        </div>
+
+        <div class="chat-panel" id="chatPanel">
+            <div class="context-info" id="contextInfo" style="display: none;">
+                <strong>📍 Context:</strong> <span id="contextText"></span>
+            </div>
+            <div class="chat-container" id="chatContainer"></div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Ask about digital literacy..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()" id="sendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Hardcoded Supabase configuration
+        const SUPABASE_URL = 'https://dwefmnwkzcrggfdfgnvp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR3ZWZtbndremNyZ2dmZGZnbnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMzYzMDcsImV4cCI6MjA4MDkxMjMwN30.aPwQhiWaH-_tHAWzvM8Pstd3TAT7Kjk4J1Zi6REJp4s';
+        const SUPABASE_TABLE = 'api_keys';
+        const CONFIG_ID = 'groq_config';
+
+        let supabaseKey = null;
+        let groqApiKey = null;
+        let conversationContext = [];
+
+        const contextKeywords = {
+            'cybersecurity': 'Cybersecurity & Online Security',
+            'password': 'Password Management',
+            'phishing': 'Phishing & Scams',
+            'social media': 'Social Media Safety',
+            'privacy': 'Privacy & Data Protection',
+            'email': 'Email Security',
+            'malware': 'Malware & Viruses',
+            'two factor': 'Two-Factor Authentication',
+            'encryption': 'Encryption',
+            'wifi': 'WiFi Security',
+            'cloud': 'Cloud Storage',
+            'browser': 'Browser Security',
+            'identity theft': 'Identity Theft Prevention',
+            'backup': 'Data Backup',
+            'software update': 'Software Updates',
+            'digital citizenship': 'Digital Citizenship',
+            'online etiquette': 'Netiquette',
+            'child safety': 'Child Online Safety',
+            'financial': 'Online Banking & Financial Security',
+            'vpn': 'VPN & Anonymity'
+        };
+
+        let detectedContext = new Set();
+
+        async function initializeApp() {
+            document.getElementById('initBtn').disabled = true;
+            showSetupStatus('Loading Groq API key from database...', '');
+
+            try {
+                await fetchGroqApiKeyFromSupabase();
+                showSetupStatus('✓ Configuration loaded successfully!', 'success');
+                
+                setTimeout(() => {
+                    document.getElementById('setupPanel').classList.add('hidden');
+                    document.getElementById('chatPanel').classList.add('active');
+                    updateStatusDot(true);
+                    document.getElementById('statusText').textContent = 'Connected';
+                    addBotMessage('👋 Welcome to Digital Literacy Chatbot! I specialize in helping you understand digital skills, cybersecurity, online safety, and internet best practices. What would you like to learn about?');
+                    document.getElementById('userInput').focus();
+                }, 500);
+            } catch (error) {
+                showSetupStatus(`❌ Error: ${error.message}`, 'error');
+                document.getElementById('initBtn').disabled = false;
+                groqApiKey = null;
+            }
+        }
+
+        async function fetchGroqApiKeyFromSupabase() {
+            const response = await fetch(
+                `${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}?id=eq.${CONFIG_ID}`,
+                {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch from Supabase: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            if (data.length === 0) {
+                throw new Error('Groq API key not found in database. Please insert it first.');
+            }
+
+            groqApiKey = data[0].groq_api_key;
+            if (!groqApiKey) {
+                throw new Error('Groq API key is empty in database');
+            }
+        }
+
+        function detectContext(text) {
+            const lowerText = text.toLowerCase();
+            const newContexts = [];
+
+            for (const [keyword, contextName] of Object.entries(contextKeywords)) {
+                if (lowerText.includes(keyword)) {
+                    if (!detectedContext.has(contextName)) {
+                        detectedContext.add(contextName);
+                        newContexts.push(contextName);
+                    }
+                }
+            }
+
+            if (newContexts.length > 0) {
+                updateContextDisplay();
+            }
+
+            return Array.from(detectedContext);
+        }
+
+        function updateContextDisplay() {
+            const contextInfo = document.getElementById('contextInfo');
+            const contextText = document.getElementById('contextText');
+
+            if (detectedContext.size > 0) {
+                contextText.textContent = Array.from(detectedContext).join(' • ');
+                contextInfo.style.display = 'block';
+            }
+        }
+
+        async function sendMessage() {
+            const message = document.getElementById('userInput').value.trim();
+            if (!message || !groqApiKey) return;
+
+            document.getElementById('userInput').value = '';
+            document.getElementById('sendBtn').disabled = true;
+
+            detectContext(message);
+            addUserMessage(message);
+            showLoadingIndicator();
+
+            try {
+                const systemPrompt = `You are an expert Digital Literacy Educator. Your role is to teach users about:
+- Cybersecurity and online security practices
+- Password management and authentication
+- Phishing, scams, and online threats
+- Privacy and data protection
+- Email security
+- Malware and virus prevention
+- Social media safety
+- Digital citizenship and netiquette
+- Online banking and financial security
+- Cloud storage and data backup
+- Browser and WiFi security
+
+Current detected topics: ${Array.from(detectedContext).join(', ') || 'General digital literacy'}
+
+Provide clear, practical, and easy-to-understand explanations. Include real-world examples when relevant. Be encouraging and approachable.`;
+
+                conversationContext.push({
+                    role: 'user',
+                    content: message
+                });
+
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${groqApiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'llama-3.3-70b-versatile',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: systemPrompt
+                            },
+                            ...conversationContext
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1024
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMsg = errorData.error?.message || response.statusText || 'Unknown error';
+                    throw new Error(`Groq API error: ${errorMsg}`);
+                }
+
+                const data = await response.json();
+                const botReply = data.choices[0].message.content;
+
+                conversationContext.push({
+                    role: 'assistant',
+                    content: botReply
+                });
+
+                // Keep only last 10 messages for context
+                if (conversationContext.length > 10) {
+                    conversationContext = conversationContext.slice(-10);
+                }
+
+                removeLoadingIndicator();
+                addBotMessage(botReply);
+            } catch (error) {
+                removeLoadingIndicator();
+                addBotMessage(`❌ Error: ${error.message}`);
+            } finally {
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('userInput').focus();
+            }
+        }
+
+        function addUserMessage(text) {
+            const msg = document.createElement('div');
+            msg.className = 'message user';
+            msg.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+            document.getElementById('chatContainer').appendChild(msg);
+            document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
+        }
+
+        function addBotMessage(text) {
+            const msg = document.createElement('div');
+            msg.className = 'message bot';
+            msg.innerHTML = `<div class="message-content">${text}</div>`;
+            document.getElementById('chatContainer').appendChild(msg);
+            document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
+        }
+
+        function showLoadingIndicator() {
+            const msg = document.createElement('div');
+            msg.className = 'message bot';
+            msg.id = 'loadingMsg';
+            msg.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
+            document.getElementById('chatContainer').appendChild(msg);
+            document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
+        }
+
+        function removeLoadingIndicator() {
+            const loading = document.getElementById('loadingMsg');
+            if (loading) loading.remove();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function showSetupStatus(message, type) {
+            const setupStatus = document.getElementById('setupStatus');
+            setupStatus.textContent = message;
+            setupStatus.className = 'setup-status ' + type;
+        }
+
+        function updateStatusDot(isConnected) {
+            const dot = document.getElementById('statusDot');
+            if (isConnected) {
+                dot.classList.remove('error');
+            } else {
+                dot.classList.add('error');
+            }
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        document.getElementById('setupPanel').addEventListener('click', (e) => {
+            if (e.target.classList.contains('reset-btn')) {
+                location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
