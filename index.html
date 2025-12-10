@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Literacy Chatbot</title>
+    <title>Digital Literacy Chatbot By Team TechAura</title>
     <style>
         * {
             margin: 0;
@@ -388,16 +388,16 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📚 Digital Literacy Chatbot</h1>
+            <h1>TechAura Digital Literacy Chatbot</h1>
             <div class="api-status">
                 <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Initializing...</span>
+                <span id="statusText">Initializing API</span>
             </div>
         </div>
 
         <div class="setup-panel" id="setupPanel">
             <div class="setup-content">
-                <h2>⚙️ Loading...</h2>
+                <h2>⚙️ Initialized</h2>
                 <button class="btn btn-primary" onclick="initializeApp()" id="initBtn">Start Chatbot</button>
                 <div class="setup-status" id="setupStatus"></div>
             </div>
@@ -453,7 +453,7 @@
 
         async function initializeApp() {
             document.getElementById('initBtn').disabled = true;
-            showSetupStatus('Loading Groq API key from database...', '');
+            showSetupStatus('Loading NexTech API key from database...', '');
 
             try {
                 await fetchGroqApiKeyFromSupabase();
@@ -492,12 +492,12 @@
 
             const data = await response.json();
             if (data.length === 0) {
-                throw new Error('Groq API key not found in database. Please insert it first.');
+                throw new Error('NexTech API key not found in database. Please insert it first.');
             }
 
             groqApiKey = data[0].groq_api_key;
             if (!groqApiKey) {
-                throw new Error('Groq API key is empty in database');
+                throw new Error('NexTech API key is empty in database');
             }
         }
 
@@ -543,7 +543,7 @@
             showLoadingIndicator();
 
             try {
-                const systemPrompt = `You are an expert Digital Literacy Educator. Your role is to teach users about:
+                const systemPrompt = `You are an expert Digital Literacy ChatBot. Your role is to teach users about:
 - Cybersecurity and online security practices
 - Password management and authentication
 - Phishing, scams, and online threats
@@ -558,7 +558,7 @@
 
 Current detected topics: ${Array.from(detectedContext).join(', ') || 'General digital literacy'}
 
-Provide clear, practical, and easy-to-understand explanations. Include real-world examples when relevant. Be encouraging and approachable.`;
+Provide clear, practical, and easy-to-understand explanations. Include real-world examples when relevant. Be encouraging and approachable.Be friendly also answer other questions if asked.`;
 
                 conversationContext.push({
                     role: 'user',
